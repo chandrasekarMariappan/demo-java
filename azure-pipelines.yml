@@ -1,7 +1,7 @@
-# Maven
-# Build your Java project and run tests with Apache Maven.
-# Add steps that analyze code, save build artifacts, deploy, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/languages/java
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
 
 trigger:
 - main
@@ -10,13 +10,46 @@ pool:
   vmImage: ubuntu-latest
 
 steps:
-- task: Maven@3
-  inputs:
-    mavenPomFile: 'pom.xml'
-    mavenOptions: '-Xmx3072m'
-    javaHomeOption: 'JDKVersion'
-    jdkVersionOption: '1.8'
-    jdkArchitectureOption: 'x64'
-    publishJUnitResults: true
-    testResultsFiles: '**/surefire-reports/TEST-*.xml'
-    goals: 'package'
+- script: echo Hello, world!
+  displayName: 'Run a one-line script'
+
+- script: |
+    echo Add other tasks to build, test, and deploy your project.
+    echo See https://aka.ms/yaml
+  displayName: 'Run a multi-line script'
+
+- script: |
+    wget https://github.com/github/codeql-action/releases/latest/download/codeql-bundle-linux64.tar.gz
+    tar -xvzf ./codeql-bundle-linux64.tar.gz
+    echo current working directory
+    pwd
+    echo list directory
+    ls
+    ./codeql/codeql resolve qlpacks
+    echo Agent build directory $(Agent.BuildDirectory)
+    echo Agent HomeDirectory directory $(Agent.HomeDirectory)
+    #codeql database create --help
+    #mkdir $(Agent.BuildDirectory)/s/codeql/codeql-dbs
+    #$(Agent.BuildDirectory)/s/codeql/codeql database create $(Agent.BuildDirectory)/s/codeql/codeql-dbs/Sec-demo-java-repo --language=java --source-root=.
+    #cd codeql
+  displayName: 'Download Codeql CLI package'
+
+- script: |
+    echo current working directory
+    pwd
+    #codeql database create --help
+    mkdir $(Agent.BuildDirectory)/s/codeql/codeql-dbs
+    $(Agent.BuildDirectory)/s/codeql/codeql database create $(Agent.BuildDirectory)/s/codeql/codeql-dbs/Sec-demo-java-repo --language=java --source-root=.
+
+    echo Agent Temp Directory directory $(Agent.TempDirectory)
+    #mkdir $(Agent.TempDirectory)
+    $(Agent.BuildDirectory)/s/codeql/codeql database analyze $(Agent.BuildDirectory)/s/codeql/codeql-dbs/Sec-demo-java-repo java-code-scanning.qls --sarif-category=java \
+    --format=sarif-latest --output=$(Agent.TempDirectory)/Sec-demo-java-repo.sarif
+  displayName: 'configure and analyze codeql database'
+
+- script: |
+    echo "$GH_TOKEN"
+    $(Agent.BuildDirectory)/s/codeql/codeql github upload-results --repository=chandrasekarMariappan/demo-java \
+    --ref=refs/heads/main --commit=deb275d2d5fe9a522a0b7bd8b6b6a1c939552718 \
+    --sarif=$(Agent.TempDirectory)/Sec-demo-java-repo.sarif --github-auth-stdin
+  displayName: 'Upload results to Github'
