@@ -48,7 +48,7 @@ steps:
   displayName: 'configure and analyze codeql database'
 
 - script: |
-    echo "$token" | $(Agent.BuildDirectory)/s/codeql/codeql github upload-results --repository=Mariselvam-T/securityPOC-demo-java \
+    echo "$token" | $(Agent.BuildDirectory)/s/codeql/codeql github upload-results --repository=chandrasekarMariappan/demo-java \
     --ref=refs/heads/main \
     --sarif=$(Agent.TempDirectory)/Sec-demo-java-repo.sarif --github-auth-stdin
   env:
